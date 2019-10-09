@@ -1,0 +1,137 @@
+ssh -p 22 sjswuhua@hp033.utah.cloudlab.us
+ssh -p 22 sjswuhua@hp016.utah.cloudlab.us
+ssh -p 22 sjswuhua@hp031.utah.cloudlab.us
+
+sudo apt-get install -y openjdk-8-jdk
+java -version
+
+scp ~/.ssh/id_rsa* sjswuhua@hp033.utah.cloudlab.us:~/.ssh/
+
+cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+
+chmod 0600 ~/.ssh/id_rsa*
+chmod 0600 ~/.ssh/authorized_keys
+rm -rf ~/.ssh/known_hosts
+echo 'StrictHostKeyChecking no' >> ~/.ssh/config
+
+wget https://archive.apache.org/dist/hadoop/core/hadoop-2.7.2/hadoop-2.7.2.tar.gz
+
+
+tar -xvzf hadoop-2.7.2.tar.gz;  mv hadoop-2.7.2    hadoop
+
+export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/ >> .bashrc
+echo export HADOOP_PREFIX=~/hadoop >> .bashrc;
+echo export HADOOP_YARN_HOME=~/hadoop >> .bashrc;
+echo export HADOOP_HOME=~/hadoop >> .bashrc;
+echo export HADOOP_CONF_DIR=~/hadoop/etc/hadoop >> .bashrc;
+echo export YARN_CONF_DIR=~/hadoop/etc/hadoop >> .bashrc;
+source .bashrc
+
+sed -i '1iexport JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64' hadoop/etc/hadoop/hadoop-env.sh
+
+sudo mkdir /dev/hdfs; sudo chmod 777 /dev/hdfs
+
+i
+:wq
+
+vim core-site.xml
+<configuration>
+  <property>
+    <name>fs.defaultFS</name>
+    <value>hdfs://ctl:9000/</value>
+  </property>
+
+  <property>
+    <name>io.file.buffer.size</name>
+    <value>131072</value>
+  </property>
+
+  <property>
+    <name>hadoop.tmp.dir</name>
+    <value>/dev/hdfs</value>
+  </property>
+
+</configuration>
+
+vim hdfs-site.xml
+<configuration>
+
+  <property>
+    <name>dfs.replication</name>
+    <value>1</value>
+  </property>
+
+  <property>
+    <name>dfs.blocksize</name>
+    <value>268435456</value>
+  </property>
+
+  <property>
+    <name>dfs.namenode.handler.count</name>
+    <value>100</value>
+  </property>
+
+</configuration>
+
+vim yarn-site.xml
+<configuration>
+  <property>
+    <name>yarn.resourcemanager.hostname</name>
+    <value>hp033.utah.cloudlab.us</value>
+  </property>
+  <property>
+    <name>yarn.resourcemanager.scheduler.class</name>
+    <value>org.apache.hadoop.yarn.server.resourcemanager.scheduler.fair.FairScheduler</value>
+  </property>
+  <property>
+    <name>yarn.scheduler.fair.allocation.file</name>
+    <value>/users/sjswuhua/hadoop/etc/fair-scheduler.xml</value>
+  </property>
+  <property>
+    <name>yarn.nodemanager.resource.cpu-vcores</name>
+    <value>10</value>
+  </property>
+  <property>
+    <name>yarn.nodemanager.resource.memory-mb</name>
+    <value>64047</value>
+  </property>
+</configuration>
+
+cat /proc/cpuinfo| grep "cpu cores"| uniq
+free -m -t
+
+
+vim fair-scheduler.xml
+<?xml version="1.0"?>
+<allocations>
+<defaultQueueSchedulingPolicy>drf</defaultQueueSchedulingPolicy>
+<queue name="queue0">
+        <weight>1</weight>
+        <allowPreemptionFrom>false</allowPreemptionFrom>
+        <schedulingPolicy>fifo</schedulingPolicy>
+</queue>
+<queue name="queue1">
+        <weight>1</weight>
+        <allowPreemptionFrom>true</allowPreemptionFrom>
+</queue>
+</allocations>
+
+hadoop/bin/hdfs namenode -format hdfs
+
+hadoop/sbin/start-dfs.sh
+
+hadoop/sbin/start-yarn.sh
+
+stop-dfs.sh
+stop-yarn.sh
+
+http://hp033.utah.cloudlab.us:50070
+http://hp033.utah.cloudlab.us:8088
+
+
+#######put file to hadoop(HDFS)
+##create a file
+:~/hadoop$ bin/hdfs dfs -mkdir /testdata
+### put file to testdata
+ ~/hadoop$ bin/hdfs dfs -put ~/hadoop/netdata/combined_data_1.txt /testdata
+
