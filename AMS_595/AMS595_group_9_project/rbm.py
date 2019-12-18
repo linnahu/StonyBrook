@@ -3,7 +3,6 @@
 """
 Created on Fri Nov 24 15:35:27 2017
 
-@author: Elent
 """
 
 from __future__ import print_function
