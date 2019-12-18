@@ -3,6 +3,7 @@
 """
 Created on Fri Nov 24 15:34:54 2017
 
+@author: 胡琳那
 """
 
 import numpy as np
